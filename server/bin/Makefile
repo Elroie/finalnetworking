@@ -6,11 +6,11 @@ clean :
 UNAME_S = (shell uname -s)
 
 ifeq (UNAME_S, Darwin)
-	CC = g++
+	CC = g++ -std=c++11
 endif 
 
 ifeq (UNAME_S, Linux)
-	CC = g++ -pthread
+	CC = g++ -std=c++11 -pthread
 endif 
 
 main : main.o 
