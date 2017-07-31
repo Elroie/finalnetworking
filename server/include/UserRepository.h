@@ -1,3 +1,6 @@
+#ifndef USERREPOSITORY_H_
+#define USERREPOSITORY_H_
+
 #include <string>
 #include <fstream>
 #include <map>
@@ -16,10 +19,12 @@ class UserRepository
 
    public:
        UserRepository();
-       ~UserRepository();
+       
        bool login(string username, string password);
        void add(string username, string password);
        std::vector<string> getOnlineUsers();
        void setUserAvailability(string username);
        bool getUserAvailability(string username);
 };
+
+#endif

@@ -1,15 +1,14 @@
-
 #include "UserRepository.h"
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <string>
+#include <stdlib.h>
+
+using namespace std;
 
 UserRepository::UserRepository(){
    UserRepository::populateCache();
-}
-
-UserRepository::~UserRepository(){
-
 }
 
 bool UserRepository::login(string username, string password){

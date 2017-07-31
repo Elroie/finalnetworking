@@ -7,11 +7,11 @@ clean :
 UNAME_S = (shell uname -s)
 
 ifeq (UNAME_S, Darwin)
-	CC = g++ -std=c++11
+	CC = g++
 endif 
 
 ifeq (UNAME_S, Linux)
-	CC = g++ -std=c++11 -pthread
+	CC = g++ -pthread
 endif 
 
 cplib : liblab8.a

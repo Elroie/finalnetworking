@@ -10,8 +10,9 @@
 #include <map>
 #include <set>
 #include <string>
-#include "UserRepository.h"
 #include <iostream>
+#include <stdlib.h>
+#include "UserRepository.h"
 
 using namespace std;
 #define PORT "9034" // port we're listening on
@@ -20,7 +21,7 @@ using namespace std;
 map <string, int> mapUserToSocket;
 
 int main(){
-    UserRepository userRepository;
+    UserRepository* userRepository;
 
     fd_set master;   // master file descriptor list
     fd_set read_fds; // temp file descriptor list for select()
@@ -115,7 +116,7 @@ int main(){
                         char *username;
                         char *password;
                         sscanf(buf, "register %s %s", username, password);
-                        userRepository.add(std::string(username), std::string(password));
+                        userRepository->add(std::string(username), std::string(password));
                     }
                     // TODO other commands
 				}
