@@ -1,7 +1,9 @@
+CXX=clang++
+CFLAGS=-O3 -std=c++0x -pg -D_DEBUG -g -c -Wall
+
 all : 
-	make -C ./src all
-	make -C ./bin all
+	make -C ./client all
 	
 clean : 
-	make -C ./src clean
-	make -C ./bin clean
+	make -C ./client clean
+

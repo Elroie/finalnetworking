@@ -146,7 +146,8 @@ int main(void) {
 					char buf[80];
 					read(STDIN, buf, 80);
 					handleStdin(buf);
-				} else if (i == listener) {
+				}
+                else if (i == listener) {
                     // handle new connections
                     addrlen = sizeof remoteaddr;
                     newfd = accept(listener, (struct sockaddr *)&remoteaddr,
@@ -168,7 +169,8 @@ int main(void) {
                                    remoteIP, INET6_ADDRSTRLEN),
                                newfd);
                     }
-                } else {
+                }
+                else {
                     // handle data from a client
                     if ((nbytes = recv(i, buf, sizeof buf, 0)) <= 0) {
                         // got error or connection closed by client

@@ -17,7 +17,7 @@ endif
 cplib : liblab8.a
 	cp liblab8.a ../lib
 
-liblab8.a : User.o UserRepository.o 
+liblab8.a : UserRepository.o 
 	ar crv $@ UserRepository.o
 
 %.o : %.cpp
