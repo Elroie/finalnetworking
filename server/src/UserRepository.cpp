@@ -31,6 +31,11 @@ void UserRepository::add(string username, string password){
 	file << username << "," << password << std::endl;
 
 	file.close();
+
+	pair<string, string> user;
+	user.first = username;
+	user.second = password;
+	this->_cache.insert(user);
 }
 
 

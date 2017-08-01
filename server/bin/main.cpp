@@ -17,7 +17,17 @@ using namespace std;
 #define PORT "9034" // port we're listening on
 #define STDIN 0
 
-map <string, int> mapUserToSocket;
+map <string, int> userToSocket; 
+map <int, string> socketToUser;
+map <int, string> socketToIPPort;
+
+static void *get_in_addr(struct sockaddr *sa) {
+    if (sa->sa_family == AF_INET) {
+        return &(((struct sockaddr_in *)sa)->sin_addr);
+    }
+
+    return &(((struct sockaddr_in6 *)sa)->sin6_addr);
+}
 
 int main(){
     UserRepository userRepository;
@@ -107,18 +117,101 @@ int main(){
 					read(STDIN, buf, 80);
                     
                     if (0==strncmp("lu\n", buf,3)) {
-                        // map <string, int>::iterator uit;
-                        // for (uit=mapUserToSocket.begin(); 
-                        //     uit != mapUserToSocket.end() ; ++uit) 
-                        //         cout << *uit.first << std::endl;
+                        std::vector<string> onlineUsers = userRepository.getOnlineUsers();
+                        std::vector<string>::iterator uit;
+                        for (uit=onlineUsers.begin(); 
+                            uit != onlineUsers.end() ; ++uit) 
+                                cout << *uit << std::endl;
                     } else if (0 == strncmp("register ", buf, 9)) {
                         char *username;
                         char *password;
                         sscanf(buf, "register %s %s", username, password);
-                        userRepository.add(std::string(username), std::string(password));
                     }
                     // TODO other commands
 				}
+                else if (i == listener) {
+                    // handle new connections
+                    addrlen = sizeof remoteaddr;
+                    newfd = accept(listener, (struct sockaddr *)&remoteaddr,
+                                   &addrlen);
+
+                    if (newfd == -1) {
+                        perror("accept");
+                    } 
+                    else {
+                        FD_SET(newfd, &master); // add to master set
+                        if (newfd > fdmax) {    // keep track of the max
+                            fdmax = newfd;
+                        }
+
+                        std::string ip = std::string(inet_ntop(
+                                   remoteaddr.ss_family,
+                                   get_in_addr((struct sockaddr *)&remoteaddr),
+                                   remoteIP, INET6_ADDRSTRLEN));
+
+                        pair<int, string> keyValue;
+                        keyValue.first = newfd;
+                        keyValue.second = ip;
+                        socketToIPPort.insert(keyValue);
+
+                        cout << "selectserver: new connection from " << ip << " on " << newfd << endl;
+                    }
+                }
+                else {
+                    // handle data from a client
+                    if ((nbytes = recv(i, buf, sizeof buf, 0)) <= 0) {
+                        // got error or connection closed by client
+                        if (nbytes == 0) {
+                            // connection closed
+                            printf("selectserver: socket %d hung up\n", i);
+                        } 
+                        else {
+                            perror("recv");
+                        }
+
+						string username = socketToUser[i];
+
+						userToSocket.erase(username); 
+						socketToUser.erase(i);
+						socketToIPPort.erase(i);
+						userRepository.setUserAvailability(username);
+
+                        close(i);           // bye!
+                        FD_CLR(i, &master); // remove from master set
+                    }
+                    else {
+                        if (0 == strncmp("play ",buf, 5)) {
+							char secondClient[10];
+							sscanf (buf, "play %s", secondClient);
+							int secondSocket = userToSocket[secondClient];
+							string secondIPPort = socketToIPPort[secondSocket];
+							write (i, secondIPPort.c_str(), secondIPPort.length());
+							write (secondSocket, socketToIPPort[i].c_str(),
+								socketToIPPort[i].length());
+						} 
+                        else if (0 == strncmp ("login ",  buf, 6)) {
+							char username[50];
+							char password[50];
+							sscanf (buf, "login %s %s", username, password);
+							if (userRepository.login(username, password)) { 
+								write (i, "login successful", 16);
+                                
+                                userRepository.add(std::string(username), std::string(password));
+                                pair<int, string> socToUser;
+                                pair<string, int> userToSoc;
+                                socToUser.first = i;
+                                socToUser.second = username;
+                                userToSoc.first = username;
+                                userToSoc.second = i;
+                                socketToUser.insert(socToUser);
+                                userToSocket.insert(userToSoc);
+							}
+                            else {
+								write (i, "login failed",12);
+                            } 
+						}
+                    }
+                }
             }
         }
     }
