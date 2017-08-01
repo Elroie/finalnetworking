@@ -9,7 +9,7 @@
 #include <unistd.h>            // for close
 #include <map>
 #include <set>
-#include <string>
+#include <strings.h>
 #include <iostream>
 #include <stdlib.h>
 #include "UserRepository.h"
@@ -116,7 +116,7 @@ int main(){
                         char *username;
                         char *password;
                         sscanf(buf, "register %s %s", username, password);
-                        userRepository->add(std::string(username), std::string(password));
+                        UserRepository::create(std::string(username), std::string(password));
                     }
                     // TODO other commands
 				}

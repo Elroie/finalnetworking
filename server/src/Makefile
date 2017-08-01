@@ -17,8 +17,8 @@ endif
 cplib : liblab8.a
 	cp liblab8.a ../lib
 
-liblab8.a : UserRepository.o 
-	ar crv $@ UserRepository.o
+liblab8.a : UserRepository.o ../../Shared/src/MThread.o
+	ar crv $@ UserRepository.o ../../Shared/src/MThread.o
 
 %.o : %.cpp
-	$(CC) -g -c -I../include $< -o $@
+	$(CC) -g -c -I../include -I../../Shared/include $< -o $@

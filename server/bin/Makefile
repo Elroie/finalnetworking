@@ -17,4 +17,4 @@ main : main.o
 	g++ -L../lib main.o -o main -llab8
 
 %.o : %.cpp
-	$(CC) -g -c -I../include $< -o $@
+	$(CC) -g -c -I../include -I../../Shared/include $< -o $@
