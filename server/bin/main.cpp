@@ -126,6 +126,8 @@ int main(){
                         char *username;
                         char *password;
                         sscanf(buf, "register %s %s", username, password);
+                        userRepository.add(std::string(username), std::string(password));
+                        cout << "added user" << endl;
                     }
                     // TODO other commands
 				}
@@ -154,7 +156,7 @@ int main(){
                         keyValue.second = ip;
                         socketToIPPort.insert(keyValue);
 
-                        cout << "selectserver: new connection from " << ip << " on " << newfd << endl;
+                        cout << "new connection from " << ip << " on " << newfd << endl;
                     }
                 }
                 else {
@@ -163,7 +165,7 @@ int main(){
                         // got error or connection closed by client
                         if (nbytes == 0) {
                             // connection closed
-                            printf("selectserver: socket %d hung up\n", i);
+                            printf("socket %d hung up\n", i);
                         } 
                         else {
                             perror("recv");
@@ -194,9 +196,9 @@ int main(){
 							char password[50];
 							sscanf (buf, "login %s %s", username, password);
 							if (userRepository.login(username, password)) { 
+                                cout << "login successful" << endl;
 								write (i, "login successful", 16);
                                 
-                                userRepository.add(std::string(username), std::string(password));
                                 pair<int, string> socToUser;
                                 pair<string, int> userToSoc;
                                 socToUser.first = i;
@@ -207,6 +209,7 @@ int main(){
                                 userToSocket.insert(userToSoc);
 							}
                             else {
+                                cout << "login failed" << endl;
 								write (i, "login failed",12);
                             } 
 						}
