@@ -183,7 +183,6 @@ int main(){
                     }
                     else {                        
                         if (0==strncmp("lu\n", buf,3)) {
-                            printf("inside list users");
                             std::vector<string> onlineUsers = userRepository.getOnlineUsers();
                             std::vector<string>::iterator uit;
                             for (uit=onlineUsers.begin(); 
