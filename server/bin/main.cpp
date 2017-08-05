@@ -113,22 +113,22 @@ int main(){
         for (i = 0; i <= fdmax; i++) {
             if (FD_ISSET(i, &read_fds)){
                 if (STDIN == i) {
-					char buf[80];
-					read(STDIN, buf, 80);
+					// char buf[80];
+					// read(STDIN, buf, 80);
                     
-                    if (0==strncmp("lu\n", buf,3)) {
-                        std::vector<string> onlineUsers = userRepository.getOnlineUsers();
-                        std::vector<string>::iterator uit;
-                        for (uit=onlineUsers.begin(); 
-                            uit != onlineUsers.end() ; ++uit) 
-                                cout << *uit << std::endl;
-                    } else if (0 == strncmp("register ", buf, 9)) {
-                        char *username;
-                        char *password;
-                        sscanf(buf, "register %s %s", username, password);
-                        userRepository.add(std::string(username), std::string(password));
-                        cout << "added user" << endl;
-                    }
+                    // if (0==strncmp("lu\n", buf,3)) {
+                    //     std::vector<string> onlineUsers = userRepository.getOnlineUsers();
+                    //     std::vector<string>::iterator uit;
+                    //     for (uit=onlineUsers.begin(); 
+                    //         uit != onlineUsers.end() ; ++uit) 
+                    //             cout << *uit << std::endl;
+                    // } else if (0 == strncmp("register ", buf, 9)) {
+                    //     char *username;
+                    //     char *password;
+                    //     sscanf(buf, "register %s %s", username, password);
+                    //     userRepository.add(std::string(username), std::string(password));
+                    //     cout << "added user" << endl;
+                    // }
                     // TODO other commands
 				}
                 else if (i == listener) {
@@ -182,7 +182,23 @@ int main(){
                         FD_CLR(i, &master); // remove from master set
                     }
                     else {
-                        if (0 == strncmp("play ",buf, 5)) {
+    					char buf[80];
+                        read(STDIN, buf, 80);
+                        
+                        if (0==strncmp("lu\n", buf,3)) {
+                            std::vector<string> onlineUsers = userRepository.getOnlineUsers();
+                            std::vector<string>::iterator uit;
+                            for (uit=onlineUsers.begin(); 
+                                uit != onlineUsers.end() ; ++uit) 
+                                    cout << *uit << std::endl;
+                        } else if (0 == strncmp("register ", buf, 9)) {
+                            char *username;
+                            char *password;
+                            sscanf(buf, "register %s %s", username, password);
+                            userRepository.add(std::string(username), std::string(password));
+                            cout << "added user" << endl;
+                        }
+                        else if (0 == strncmp("play ",buf, 5)) {
 							char secondClient[10];
 							sscanf (buf, "play %s", secondClient);
 							int secondSocket = userToSocket[secondClient];
