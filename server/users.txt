@@ -1,4 +1,3 @@
 
-asdfsdafasdf22omri,123456
 omri,123456
 guy,123456

@@ -15,13 +15,14 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <netdb.h>
+#include <iostream>
 
 #define MYPORT 4950    // the port users will be connecting to
 #define STDIN 0
 #define STDOUT 0
-#define MAXBUFLEN 100
+#define MAXBUFLEN 256
 #define PORT 9034
-#define MAXDATASIZE 100
+#define MAXDATASIZE 256
 
 int udpSocket=0;
 int tcpSocket=0;
@@ -106,21 +107,33 @@ int main(void)
 					perror("connect");
 					exit(1);
 				}
-				printf ("Connected to the server successfully.");
+				printf("Connected to the server successfully.\n");
 				FD_SET(tcpSocket, &master);
 			}
 			else if (0 == strncmp("lu", buf, 2)) {
-				int outputlen = write(tcpSocket, buf, 100);
+				int outputlen = write(tcpSocket, buf, sizeof(buf));
 
 			}
 			else if (0 == strncmp("login", buf, 5)) {
-				int outputlen = write(tcpSocket, buf, 100);
+				int outputlen = write(tcpSocket, buf, sizeof(buf));
 			}
 			else if (0 == strncmp("register ", buf, 9)) {
-				int outputlen = write(tcpSocket, buf, 100);
+				int outputlen = write(tcpSocket, buf, sizeof(buf));
 
 			}
 			
+			//play with random user
+			/*else if (0 == strncmp("play\n", buf, 5)) {
+							int outputlen = write(tcpSocket, buf, sizeof(buf));
+
+			}*/
+			//play with specific user
+			else if (0 == strncmp("play", buf, 4)) {
+				printf("play command\n");
+				int outputlen = write(tcpSocket, buf, sizeof(buf));
+
+			}
+
 
 		}  
 		/*if (udpSocket && FD_ISSET(udpSocket, &readfds)) {
@@ -147,8 +160,9 @@ int main(void)
 		}
 		*/
 		if (tcpSocket && FD_ISSET(tcpSocket, &readfds)) {
+			printf("tcp socket is set\n");
 			if ((numbytes=recv(tcpSocket, buf, MAXDATASIZE-1, 0)) > 0) {
-				// TODO
+				printf("got from server %s \n", buf);
 			} else {
 				FD_CLR(tcpSocket, &master);			
 				tcpSocket = 0;
