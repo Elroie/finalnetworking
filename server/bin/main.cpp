@@ -181,11 +181,9 @@ int main(){
                         close(i);           // bye!
                         FD_CLR(i, &master); // remove from master set
                     }
-                    else {
-    					char buf[80];
-                        read(STDIN, buf, 80);
-                        
+                    else {                        
                         if (0==strncmp("lu\n", buf,3)) {
+                            printf("inside list users");
                             std::vector<string> onlineUsers = userRepository.getOnlineUsers();
                             std::vector<string>::iterator uit;
                             for (uit=onlineUsers.begin(); 
