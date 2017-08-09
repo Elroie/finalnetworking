@@ -20,6 +20,7 @@ using namespace std;
 map <string, int> userToSocket; 
 map <int, string> socketToUser;
 map <int, string> socketToIPPort;
+map <int, int> pendingInvitations;
 
 static void *get_in_addr(struct sockaddr *sa) {
     if (sa->sa_family == AF_INET) {
@@ -104,6 +105,8 @@ int main(){
 
     // main loop
     for (;;) {
+        cout << "inside main loop" << endl;
+
         read_fds = master; // copy it
         if (select(fdmax + 1, &read_fds, NULL, NULL, NULL) == -1) {
             perror("select");
@@ -113,22 +116,21 @@ int main(){
         for (i = 0; i <= fdmax; i++) {
             if (FD_ISSET(i, &read_fds)){
                 if (STDIN == i) {
-					// char buf[80];
-					// read(STDIN, buf, 80);
-                    
-                    // if (0==strncmp("lu\n", buf,3)) {
-                    //     std::vector<string> onlineUsers = userRepository.getOnlineUsers();
-                    //     std::vector<string>::iterator uit;
-                    //     for (uit=onlineUsers.begin(); 
-                    //         uit != onlineUsers.end() ; ++uit) 
-                    //             cout << *uit << std::endl;
-                    // } else if (0 == strncmp("register ", buf, 9)) {
-                    //     char *username;
-                    //     char *password;
-                    //     sscanf(buf, "register %s %s", username, password);
-                    //     userRepository.add(std::string(username), std::string(password));
-                    //     cout << "added user" << endl;
-                    // }
+                    if (0==strncmp("lu\n", buf,3)) {
+                        cout << "inside lu" << endl;
+                        std::vector<string> onlineUsers = userRepository.getOnlineUsers();
+                        std::vector<string>::iterator uit;
+                        for (uit=onlineUsers.begin(); uit != onlineUsers.end() ; ++uit) {
+                            cout << "some names" << endl;
+                            cout << *uit << std::endl;
+                        }
+                    } else if (0 == strncmp("register ", buf, 9)) {
+                        char *username;
+                        char *password;
+                        sscanf(buf, "register %s %s", username, password);
+                        userRepository.add(std::string(username), std::string(password));
+                        cout << "added user" << endl;
+                    }
                     // TODO other commands
 				}
                 else if (i == listener) {
@@ -181,13 +183,16 @@ int main(){
                         close(i);           // bye!
                         FD_CLR(i, &master); // remove from master set
                     }
-                    else {                        
+                    else {
                         if (0==strncmp("lu\n", buf,3)) {
                             std::vector<string> onlineUsers = userRepository.getOnlineUsers();
                             std::vector<string>::iterator uit;
-                            for (uit=onlineUsers.begin(); 
-                                uit != onlineUsers.end() ; ++uit) 
+                            for (uit=onlineUsers.begin(); uit != onlineUsers.end() ; ++uit){
                                     cout << *uit << std::endl;
+                                    // write(i, *uit, *uit->length());
+
+                            } 
+                                    
                         } else if (0 == strncmp("register ", buf, 9)) {
                             char *username;
                             char *password;
@@ -200,10 +205,56 @@ int main(){
 							sscanf (buf, "play %s", secondClient);
 							int secondSocket = userToSocket[secondClient];
 							string secondIPPort = socketToIPPort[secondSocket];
-							write (i, secondIPPort.c_str(), secondIPPort.length());
-							write (secondSocket, socketToIPPort[i].c_str(),
-								socketToIPPort[i].length());
-						} 
+                            pair<int, int> gameRequest;
+                            gameRequest.first = secondSocket;
+                            gameRequest.second = i;
+                            pendingInvitations.insert(gameRequest);
+							// write (i, secondIPPort.c_str(), secondIPPort.length());
+                            string invitationMessage = socketToIPPort[i] + " has invited you to play";
+							write (secondSocket, invitationMessage.c_str(), invitationMessage.length());
+						}
+                        else if (0 == strncmp("y\n ",buf, 2)) {
+							if (pendingInvitations.count(i) > 0){
+                                // send approval with ip of the user for the sender.
+                                int senderSocket = pendingInvitations[i];
+                                string ip = socketToIPPort[i];
+                                string message = "invitation accepted " + ip;
+                                write(senderSocket, message.c_str(), message.length());
+                            }
+                            else {
+                                // send to socket... no pending invitations.
+                                string message = "No pending invitations.";
+                                write(i, message.c_str(), message.length());
+                            }
+						}
+                        else if (0 == strncmp("n\n ",buf, 2)) {
+							if (pendingInvitations.count(i) > 0){
+                                // send approval with ip of the user for the sender.
+                                int senderSocket = pendingInvitations[i];
+                                string ip = socketToIPPort[i];
+                                string message = "invitation rejected";
+                                write(senderSocket, message.c_str(), message.length());                                
+                            }
+                            else {
+                                // send to socket... no pending invitations.
+                                string message = "No pending invitations.";
+                                write(i, message.c_str(), message.length());
+                            }
+						}
+                        else if (0 == strncmp("play random\n",buf, 12)) {
+                            std::vector<string> onlineUsers = userRepository.getOnlineUsers();
+                            string username = socketToUser[i];
+                            string randomUser = "";
+
+                            // while random user is the same user... choose another random user.
+                            do {
+                                int randomIndex = rand() % onlineUsers.size();
+                                randomUser = onlineUsers[randomIndex];
+                            } while(username == randomUser);
+                            string ip = socketToIPPort[userToSocket[randomUser]];
+
+                            write(i, ip.c_str(), ip.length());
+						}
                         else if (0 == strncmp ("login ",  buf, 6)) {
 							char username[50];
 							char password[50];
