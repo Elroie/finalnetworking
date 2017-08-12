@@ -213,8 +213,9 @@ int main(){
                             gameRequest.first = secondSocket;
                             gameRequest.second = i;
                             pendingInvitations.insert(gameRequest);
-							// write (i, secondIPPort.c_str(), secondIPPort.length());
-                            string invitationMessage = socketToIPPort[i] + " has invited you to play";
+                            string confirmMessage = "PlayS: " +secondIPPort + "\n" ;
+							write (i, confirmMessage.c_str(), confirmMessage.length());
+                            string invitationMessage = "PlayR: "+ socketToIPPort[i] +"\n";
 							write (secondSocket, invitationMessage.c_str(), invitationMessage.length());
 						}
                         else if (0 == strncmp("y\n ",buf, 2)) {

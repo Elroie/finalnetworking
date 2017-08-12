@@ -17,7 +17,7 @@
 #include <netdb.h>
 #include <iostream>
 
-#define MYPORT 4950    // the port users will be connecting to
+#define MYPORT 4951    // the port users will be connecting to
 #define STDIN 0
 #define STDOUT 0
 #define MAXBUFLEN 256
@@ -84,10 +84,12 @@ int main(void)
 	FD_SET(udpSocket, &master);
 	fdmax=udpSocket;
 	for(;;){
+		memset(buf,0, 255);
 		readfds=master;
-		select(fdmax,&readfds, NULL, NULL, NULL);
+		select(fdmax+1,&readfds, NULL, NULL, NULL);
 		if (FD_ISSET (STDIN, &readfds)) {
 			int inputlen=read(STDIN, buf, MAXBUFLEN);
+			printf("buf is %s \n",buf);
 			if (0 == strncmp("c ", buf, 2)) {
 				struct hostent *he;
 				if ((he=gethostbyname(buf+2)) == NULL) {  // get the host info 
@@ -108,6 +110,9 @@ int main(void)
 					exit(1);
 				}
 				printf("Connected to the server successfully.\n");
+				if (tcpSocket > fdmax){
+					fdmax=tcpSocket;
+				}
 				FD_SET(tcpSocket, &master);
 			}
 			else if (0 == strncmp("lu", buf, 2)) {
@@ -130,6 +135,16 @@ int main(void)
 			//play with specific user
 			else if (0 == strncmp("play", buf, 4)) {
 				printf("play command\n");
+				int outputlen = write(tcpSocket, buf, sizeof(buf));
+
+			}
+
+			else if (0 == strncmp("y", buf, 1)) {
+				int outputlen = write(tcpSocket, buf, sizeof(buf));
+
+			}
+
+			else if (0 == strncmp("n", buf, 1)) {
 				int outputlen = write(tcpSocket, buf, sizeof(buf));
 
 			}
@@ -160,10 +175,20 @@ int main(void)
 		}
 		*/
 		if (tcpSocket && FD_ISSET(tcpSocket, &readfds)) {
-			printf("tcp socket is set\n");
 			if ((numbytes=recv(tcpSocket, buf, MAXDATASIZE-1, 0)) > 0) {
-				printf("got from server %s \n", buf);
-			} else {
+				printf("Got from server:  %s \n", buf);
+				char secondIPport[100];
+					if (0 == strncmp("PlayS",buf, 5)){
+						//sscanf (buf, "PlayS: %s", secondIPport);
+						printf("Initiated a game with %s", buf);
+					}
+					if (0 == strncmp("PlayR",buf, 5)){
+						//sscanf (buf, "PlayR: %s", secondIPport);
+						printf("Received a game from %s",buf);
+					}
+
+
+			} 	else{
 				FD_CLR(tcpSocket, &master);			
 				tcpSocket = 0;
 			}
