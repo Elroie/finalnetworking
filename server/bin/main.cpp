@@ -115,7 +115,7 @@ int main(){
 
         for (i = 0; i <= fdmax; i++) {
             if (FD_ISSET(i, &read_fds)){
-                if (STDIN == i) {
+                if (i==STDIN) {
                     if (0==strncmp("lu\n", buf,3)) {
                         cout << "inside lu" << endl;
                         std::vector<string> onlineUsers = userRepository.getOnlineUsers();
@@ -125,6 +125,7 @@ int main(){
                             cout << *uit << std::endl;
                         }
                     } else if (0 == strncmp("register ", buf, 9)) {
+                         cout << "inside register" << endl;
                         char *username;
                         char *password;
                         sscanf(buf, "register %s %s", username, password);
@@ -184,18 +185,21 @@ int main(){
                         FD_CLR(i, &master); // remove from master set
                     }
                     else {
+                        cout << "buf is" << buf << endl;
                         if (0==strncmp("lu\n", buf,3)) {
                             std::vector<string> onlineUsers = userRepository.getOnlineUsers();
                             std::vector<string>::iterator uit;
                             for (uit=onlineUsers.begin(); uit != onlineUsers.end() ; ++uit){
                                     cout << *uit << std::endl;
-                                    // write(i, *uit, *uit->length());
+                                    //cout << uit->length()<< endl;
+                                    write(i, &(*uit), uit->length()+1);
 
                             } 
                                     
                         } else if (0 == strncmp("register ", buf, 9)) {
-                            char *username;
-                            char *password;
+                            cout << "inside register" << endl;
+                            char *username = (char*)malloc(sizeof(char)*10);;
+                            char *password = (char*)malloc(sizeof(char)*10);;
                             sscanf(buf, "register %s %s", username, password);
                             userRepository.add(std::string(username), std::string(password));
                             cout << "added user" << endl;
