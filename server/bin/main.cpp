@@ -213,9 +213,7 @@ int main(){
                             gameRequest.first = secondSocket;
                             gameRequest.second = i;
                             pendingInvitations.insert(gameRequest);
-                            string confirmMessage = "PlayS: " +secondIPPort + "\n" ;
-							write (i, confirmMessage.c_str(), confirmMessage.length());
-                            string invitationMessage = "PlayR: "+ socketToIPPort[i] +"\n";
+                            string invitationMessage= "Got game invitation from " + socketToUser[i] + "\n";
 							write (secondSocket, invitationMessage.c_str(), invitationMessage.length());
 						}
                         else if (0 == strncmp("y\n ",buf, 2)) {
@@ -223,8 +221,12 @@ int main(){
                                 // send approval with ip of the user for the sender.
                                 int senderSocket = pendingInvitations[i];
                                 string ip = socketToIPPort[i];
-                                string message = "invitation accepted " + ip;
+                                string message = "PlayS: " + ip;
                                 write(senderSocket, message.c_str(), message.length());
+                                message = "PlayR: " + socketToIPPort[senderSocket];
+                                write(i, message.c_str(), message.length());
+
+
                             }
                             else {
                                 // send to socket... no pending invitations.

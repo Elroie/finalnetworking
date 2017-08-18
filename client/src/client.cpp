@@ -26,6 +26,7 @@
 
 int udpSocket=0;
 int tcpSocket=0;
+bool pendingInvite=false;
 /*
 class game {
 	virtual int handleInput(char * userInput, int inputLen,
@@ -103,7 +104,7 @@ int main(void)
 				server_addr.sin_family = AF_INET;    // host byte order 
 				server_addr.sin_port = htons(PORT);  // short, network byte order 
 				server_addr.sin_addr = *((struct in_addr *)he->h_addr);
-				memset(&(their_addr.sin_zero), '\0', 8);  // zero the rest of the struct 
+				memset(&(server_addr.sin_zero), '\0', 8);  // zero the rest of the struct
 				if (connect(tcpSocket, (struct sockaddr *)&server_addr,
                                           sizeof(struct sockaddr)) == -1) {
 					perror("connect");
@@ -139,12 +140,14 @@ int main(void)
 
 			}
 
-			else if (0 == strncmp("y", buf, 1)) {
+			else if (0 == strncmp("y", buf, 1) && pendingInvite) {
+				pendingInvite=false;
 				int outputlen = write(tcpSocket, buf, sizeof(buf));
 
 			}
 
-			else if (0 == strncmp("n", buf, 1)) {
+			else if (0 == strncmp("n", buf, 1) && pendingInvite) {
+				pendingInvite=false;
 				int outputlen = write(tcpSocket, buf, sizeof(buf));
 
 			}
@@ -179,12 +182,23 @@ int main(void)
 				printf("Got from server:  %s \n", buf);
 				char secondIPport[100];
 					if (0 == strncmp("PlayS",buf, 5)){
-						//sscanf (buf, "PlayS: %s", secondIPport);
-						printf("Initiated a game with %s", buf);
+						sscanf (buf, "PlayS\: %s",secondIPport);
+						printf("Ready to play game with (Sender) %s\n",secondIPport);
+						//inet_ntop(AF_INET, &(sa.sin_addr), str, INET_ADDRSTRLEN);
+
 					}
 					if (0 == strncmp("PlayR",buf, 5)){
-						//sscanf (buf, "PlayR: %s", secondIPport);
-						printf("Received a game from %s",buf);
+						sscanf (buf, "PlayR\: %s",secondIPport);
+						printf("Ready to play game with (Receiver) %s\n",secondIPport);
+						//inet_ntop(AF_INET, &(sa.sin_addr), str, INET_ADDRSTRLEN);
+
+					}
+
+
+					if (0 == strncmp("Got game invitation from",buf, 24) && pendingInvite==false){
+						pendingInvite=true;
+						printf("Do you want to play? (Y/N)\n");
+
 					}
 
 
