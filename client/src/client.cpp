@@ -78,6 +78,8 @@ int main(void)
 	fd_set readfds;
 	int fdmax;
 	int score=0;
+	int mynumber;
+	int opponentguess;
 
 
 	printf("Please insert client number\n");
@@ -109,7 +111,6 @@ int main(void)
 		select(fdmax+1,&readfds, NULL, NULL, NULL);
 		if (FD_ISSET (STDIN, &readfds)) {
 			int inputlen=read(STDIN, buf, MAXBUFLEN);
-			printf("buf is %s \n",buf);
 			if (!ingame){
 				if (0 == strncmp("c ", buf, 2)) {
 					struct hostent *he;
@@ -177,23 +178,8 @@ int main(void)
 
 			}
 			else if (ingame && turn){
-				score++;
-				if (score>3){
-					char winmessage[256]="I won\n";
-					int numbytes = sendto(udpSocket,winmessage,sizeof(winmessage),0,(struct sockaddr *)&their_addr,sizeof(their_addr));
-					turn=false;
-					ingame=false;
-					printf("The game is over you won. Please run game/lu to start another game\n");
-					int outputlen = write(tcpSocket, winmessage, sizeof(winmessage));
-
-				}
-				else{
-					int numbytes = sendto(udpSocket,buf,sizeof(buf),0,(struct sockaddr *)&their_addr,sizeof(their_addr));
-					printf("Sent UDP message in size of %d\n",numbytes);
-					turn=false;
-				}
-
-
+				int numbytes = sendto(udpSocket,buf,sizeof(buf),0,(struct sockaddr *)&their_addr,sizeof(their_addr));
+				turn=false;
 			}
 
 
@@ -201,19 +187,39 @@ int main(void)
 
 
 		if (udpSocket && FD_ISSET(udpSocket, &readfds)) {
-			printf("Passed the udpsocket condition \n");
 			addr_len = (unsigned int) sizeof(their_addr);
 			/*if ((numbytes = recvfrom(udpSocket,buf, MAXBUFLEN-1, 0,(struct sockaddr *)&their_addr, &addr_len)) == -1) {
 						perror("recvfrom");
 						exit(1);
 			}*/
 		int numbytes = recvfrom(udpSocket,buf, MAXBUFLEN-1, 0,(struct sockaddr *)&their_addr, &addr_len);
-		printf("Got: %s\n", buf);
-		turn=true;
-		if (0 == strncmp("I won", buf, 5) && ingame) {
+		if (0 == strncmp("I lost", buf, 5) && ingame) {
 			turn=false;
 			ingame=false;
-			printf("The game is over you lost. Please run game/lu to start another game\n");
+			printf("The game is over, you won. Please run game/lu to start another game\n");
+			char winmessage[256]="I won\n";
+			int outputlen = write(tcpSocket, winmessage, sizeof(winmessage));
+
+		}
+		else if  (0 == strncmp("bad guess", buf, 9) && ingame){
+			printf("Your guess was wrong. Waiting for your opponent guess....\n");
+		}
+		else {
+			opponentguess=atoi(buf);
+			if(opponentguess==mynumber){
+				char winmessage[256]="I lost\n";
+				int numbytes = sendto(udpSocket,winmessage,sizeof(winmessage),0,(struct sockaddr *)&their_addr,sizeof(their_addr));
+				ingame=false;
+				printf("The game is over. you lost. Please run game/lu to start another game\n");
+
+			}
+			else{
+				char badguess[256]="bad guess\n";
+				int numbytes = sendto(udpSocket,badguess,sizeof(badguess),0,(struct sockaddr *)&their_addr,sizeof(their_addr));
+				turn=true;
+				printf("Opponent failed. Please guess your opponent number\n");
+			}
+
 
 		}
 
@@ -237,11 +243,9 @@ int main(void)
 
 		if (tcpSocket && FD_ISSET(tcpSocket, &readfds)) {
 			if ((numbytes=recv(tcpSocket, buf, MAXDATASIZE-1, 0)) > 0) {
-				printf("Got from server:  %s \n", buf);
 				char secondIPport[100];
 					if (0 == strncmp("PlayS",buf, 5)){
 						sscanf (buf, "PlayS\: %s",secondIPport);
-						printf("Ready to play game with (Sender) %s\n",secondIPport);
 						inet_ntop(AF_INET, &(their_addr.sin_addr), secondIPport, INET6_ADDRSTRLEN);
 						their_addr.sin_family = AF_INET;         // host byte order
 						their_addr.sin_port = htons(theirport);     // short, network byte order
@@ -249,31 +253,34 @@ int main(void)
 						ingame=true;
 						turn=true;
 						//start the game
-						printf("say hey\n");
-
-
-						/*char message[256]="This is the first UDP message\n";
-						int numbytes = sendto(udpSocket,message,sizeof(message),0,(struct sockaddr *)&their_addr,sizeof(their_addr));
-						printf("Sent UDP message in size of %d\n",numbytes);*/
+						printf("Game is starting!!!\n");
+						printf("Choose number between  1 to 20 \n");
+						scanf("%d",&mynumber);
+						printf("Please guess your opponent number\n");
 
 					}
-					if (0 == strncmp("PlayR",buf, 5)){
+					else if (0 == strncmp("PlayR",buf, 5)){
 						sscanf (buf, "PlayR\: %s",secondIPport);
-						printf("Ready to play game with (Receiver) %s\n",secondIPport);
 						inet_ntop(AF_INET, &(their_addr.sin_addr), secondIPport, INET6_ADDRSTRLEN);
 						their_addr.sin_family = AF_INET;         // host byte order
 						their_addr.sin_port = htons(theirport);     // short, network byte order
 						memset(&(their_addr.sin_zero), '\0', 8); // zero the rest of the struct
 						ingame=true;
+						printf("Game is starting!!!\n");
+						printf("Choose number between  1 to 20 \n");
+						scanf("%d",&mynumber);
+						printf("It's your opponent turn... waiting for his guess...\n");
 
 					}
-
-
-					if (0 == strncmp("Got game invitation from",buf, 24) && pendingInvite==false){
+					else if (0 == strncmp("Got game invitation from",buf, 24) && pendingInvite==false){
 						pendingInvite=true;
 						printf("Do you want to play? (Y/N)\n");
 
 					}
+					else{
+						printf("Got from server:  %s \n", buf);
+					}
+
 
 
 			} 	else{
