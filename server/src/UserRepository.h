@@ -3,7 +3,6 @@
 #include <map>
 #include <cstring>
 #include <vector>
-// #include <libssl/md5.h>
 
 using namespace std;
 
@@ -20,6 +19,6 @@ class UserRepository
        bool login(string username, string password);
        void add(string username, string password);
        std::vector<string> getOnlineUsers();
-       void setUserAvailability(string username);
+       void setUserAvailability(string username, bool isAvailable);
        bool getUserAvailability(string username);
 };

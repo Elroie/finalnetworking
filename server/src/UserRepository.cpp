@@ -1,5 +1,6 @@
 
 #include "UserRepository.h"
+#include "ScoreRepository.h"
 #include <sstream>
 #include <iostream>
 #include <vector>
@@ -36,6 +37,10 @@ void UserRepository::add(string username, string password){
 	user.first = username;
 	user.second = password;
 	this->_cache.insert(user);
+
+	// create a record in scoreBoard.
+	ScoreRepository scoreRepository;
+	scoreRepository.updateUserScore(username, 0);
 }
 
 
@@ -76,6 +81,6 @@ bool UserRepository::getUserAvailability(string username){
 	return this->_onlineUsers2availability[username];
 }
 
-void UserRepository::setUserAvailability(string username){
-	this->_onlineUsers2availability[username] = false;
+void UserRepository::setUserAvailability(string username, bool isAvailable){
+	this->_onlineUsers2availability[username] = isAvailable;
 }

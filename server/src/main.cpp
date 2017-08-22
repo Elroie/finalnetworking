@@ -11,6 +11,8 @@
 #include <set>
 #include <string>
 #include "UserRepository.h"
+#include "HashUtils.h"
+#include "ScoreRepository.h"
 #include <iostream>
 
 using namespace std;
@@ -32,6 +34,7 @@ static void *get_in_addr(struct sockaddr *sa) {
 
 int main(){
     UserRepository userRepository;
+    ScoreRepository scores;
 
     fd_set master;   // master file descriptor list
     fd_set read_fds; // temp file descriptor list for select()
@@ -116,6 +119,7 @@ int main(){
         for (i = 0; i <= fdmax; i++) {
             if (FD_ISSET(i, &read_fds)){
                 if (i==STDIN) {
+                		cout << "inside STDIN" << endl;
                     if (0==strncmp("lu\n", buf,3)) {
                         cout << "inside lu" << endl;
                         std::vector<string> onlineUsers = userRepository.getOnlineUsers();
@@ -179,7 +183,7 @@ int main(){
 						userToSocket.erase(username); 
 						socketToUser.erase(i);
 						socketToIPPort.erase(i);
-						userRepository.setUserAvailability(username);
+						userRepository.setUserAvailability(username, false);
 
                         close(i);           // bye!
                         FD_CLR(i, &master); // remove from master set
@@ -187,11 +191,11 @@ int main(){
                     else {
                         cout << "buf is" << buf << endl;
                         if (0==strncmp("lu\n", buf,3)) {
+                        	   cout << "inside lu" << endl;
                             std::vector<string> onlineUsers = userRepository.getOnlineUsers();
                             std::vector<string>::iterator uit;
                             for (uit=onlineUsers.begin(); uit != onlineUsers.end() ; ++uit){
                                     cout << *uit << std::endl;
-                                    //cout << uit->length()<< endl;
                                     write(i, &(*uit), uit->length()+1);
 
                             } 
@@ -225,7 +229,7 @@ int main(){
                                 write(senderSocket, message.c_str(), message.length());
                                 message = "PlayR: " + socketToIPPort[senderSocket];
                                 write(i, message.c_str(), message.length());
-
+                                pendingInvitations.erase(i);
 
                             }
                             else {
@@ -240,7 +244,8 @@ int main(){
                                 int senderSocket = pendingInvitations[i];
                                 string ip = socketToIPPort[i];
                                 string message = "invitation rejected";
-                                write(senderSocket, message.c_str(), message.length());                                
+                                write(senderSocket, message.c_str(), message.length());
+                                pendingInvitations.erase(i);
                             }
                             else {
                                 // send to socket... no pending invitations.
@@ -283,6 +288,19 @@ int main(){
                                 cout << "login failed" << endl;
 								write (i, "login failed",12);
                             } 
+						}
+                        else if (0 == strncmp ("score board\n",  buf, 12)) {
+                            vector<string> scoreBoard = scores.getScoreBoard();
+
+                            std::vector<string>::iterator uit;
+								for (uit=scoreBoard.begin(); uit != scoreBoard.end() ; ++uit) {
+									write(i, &(*uit), uit->length()+1);
+								}
+						}
+                        else if (0 == strncmp ("i won ",  buf, 6)) {
+                        	int score = 0;
+                        	sscanf (buf, "i won %d", score);
+                            scores.updateUserScore(socketToUser[i], score);
 						}
                     }
                 }
