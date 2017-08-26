@@ -1,6 +1,7 @@
 
 #include "UserRepository.h"
 #include "ScoreRepository.h"
+#include "HashUtils.h"
 #include <sstream>
 #include <iostream>
 #include <vector>
@@ -13,13 +14,44 @@ UserRepository::~UserRepository(){
 
 }
 
+//bool UserRepository::login(string username, string password){
+//	if (this->_cache.count(username) > 0){
+//		pair<string, bool> val;
+//		val.first = username;
+//		val.second = true;
+//		this->_onlineUsers2availability.insert(val);
+//		return this->_cache[username] == password;
+//	}
+//
+//	return false;
+//}
+//
+//void UserRepository::add(string username, string password){
+//	ofstream file;
+//	file.open("users.txt", std::ofstream::out | std::ofstream::app);
+//
+//	file << username << "," << password << std::endl;
+//
+//	file.close();
+//
+//	pair<string, string> user;
+//	user.first = username;
+//	user.second = password;
+//	this->_cache.insert(user);
+//
+//	// create a record in scoreBoard.
+//	ScoreRepository scoreRepository;
+//	scoreRepository.updateUserScore(username, 0);
+//}
+
 bool UserRepository::login(string username, string password){
 	if (this->_cache.count(username) > 0){
+		HashUtils hashUtils;
 		pair<string, bool> val;
 		val.first = username;
 		val.second = true;
 		this->_onlineUsers2availability.insert(val);
-		return this->_cache[username] == password;
+		return this->_cache[username] == hashUtils.encrypt(password);
 	}
 
 	return false;
@@ -27,22 +59,23 @@ bool UserRepository::login(string username, string password){
 
 void UserRepository::add(string username, string password){
 	ofstream file;
+	HashUtils hashUtils;
 	file.open("users.txt", std::ofstream::out | std::ofstream::app);
 
-	file << username << "," << password << std::endl;
+	string hash = hashUtils.encrypt(password);
+	file << username << "," << hash << std::endl;
 
 	file.close();
 
 	pair<string, string> user;
 	user.first = username;
-	user.second = password;
+	user.second = hash;
 	this->_cache.insert(user);
 
 	// create a record in scoreBoard.
 	ScoreRepository scoreRepository;
 	scoreRepository.updateUserScore(username, 0);
 }
-
 
 void UserRepository::populateCache(){
    char *username;

@@ -126,7 +126,7 @@ int main(){
                         std::vector<string>::iterator uit;
                         for (uit=onlineUsers.begin(); uit != onlineUsers.end() ; ++uit) {
                             cout << "some names" << endl;
-                            cout << *uit << std::endl;
+                            cout << *uit << "," << std::endl;
                         }
                     } else if (0 == strncmp("register ", buf, 9)) {
                          cout << "inside register" << endl;
